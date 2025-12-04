@@ -49,13 +49,6 @@ The simulation includes approximations of the following strategies:
 2.  Open `index.html` in any modern web browser.
 3.  Click **Auto-Play** to start the tournament or use **Step +1** to move manually.
 
-## 🛠 Technologies Used
-
--   **HTML5**
--   **JavaScript (ES6+)**
--   **Tailwind CSS** (via CDN) for styling
--   **Chart.js** (via CDN)
-
 ## ⚠️ Disclaimer
 
 The strategies implemented here are approximations based on descriptions from Robert Axelrod's *"The Evolution of Cooperation"*. As the original 1980 source code is not publicly available, specific implementation details (like exact random seeds, tie-breaking logic, or complex look-back depths) may differ slightly from the original tournament.
