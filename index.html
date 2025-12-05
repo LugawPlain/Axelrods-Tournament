@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axelrod's Prisoner's Dilemma Tournament</title>
-    <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .grid-cell { transition: all 0.1s; }
-        .strategy-label { font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* Custom scrollbar for the timeline */
-        .timeline-scroll::-webkit-scrollbar { height: 8px; }
-        .timeline-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .timeline-scroll::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
-        .timeline-scroll::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        /* Custom scrollbar for the timeline and grid */
+        .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
 
         .selected-cell {
             border: 2px solid #6366f1 !important; /* Indigo-500 */
@@ -24,140 +21,129 @@
             transform: scale(1.1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-
-        /* Modal Animation */
-        .modal-enter { opacity: 0; transform: scale(0.95); }
-        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s; }
-        .modal-exit { opacity: 1; transform: scale(1); }
-        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: all 0.2s; }
     </style>
 </head>
-<body class="p-4 md:p-8 relative">
+<body class="p-2 md:p-6 lg:p-8 min-h-screen">
 
-    <div class="max-w-[1400px] mx-auto">
-        <!-- Header -->
-        <header class="mb-6 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">Axelrod's Tournament</h1>
-                <p class="text-gray-500 mt-1 text-sm">Select a grid cell for match details, or click a strategy name for logic info.</p>
+    <div class="max-w-[1600px] mx-auto">
+        <header class="mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-center bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Axelrod's Tournament</h1>
+                <p class="text-gray-500 mt-1 text-xs md:text-sm">Select a grid cell for match details.</p>
             </div>
-            <div class="flex items-center gap-3 mt-4 md:mt-0">
-                <div class="text-right mr-4 border-r pr-6 border-gray-200">
-                    <div class="text-xs text-gray-400 uppercase tracking-wider">Round</div>
-                    <div class="text-4xl font-mono font-bold text-indigo-600" id="round-display">0/200</div>
+            
+            <div class="flex flex-wrap justify-center items-center gap-2 md:gap-3 w-full md:w-auto">
+                <div class="text-right mr-2 md:mr-4 border-r pr-4 md:pr-6 border-gray-200 hidden sm:block">
+                    <div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Round</div>
+                    <div class="text-2xl md:text-4xl font-mono font-bold text-indigo-600" id="round-display">0/200</div>
+                </div>
+                <div class="sm:hidden w-full text-center text-indigo-600 font-mono font-bold text-xl mb-2" id="round-display-mobile">
+                    Round: 0/200
                 </div>
                 
-                <button onclick="stepGame()" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
-                    <span>⏯</span> Step +1
-                </button>
+                <div class="flex gap-2 w-full md:w-auto justify-center">
+                    <button onclick="stepGame()" class="flex-1 md:flex-none bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg font-medium transition flex justify-center items-center gap-2 text-sm">
+                        <span>⏯</span> <span class="hidden sm:inline">Step</span>
+                    </button>
 
-                <button onclick="togglePlay()" id="play-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
-                    <span id="play-icon">▶</span> Auto-Play
-                </button>
+                    <button onclick="togglePlay()" id="play-btn" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition flex justify-center items-center gap-2 shadow-sm text-sm min-w-[100px]">
+                        <span id="play-icon">▶</span> Auto-Play
+                    </button>
 
-                <button onclick="resetGame()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-medium transition">
-                    Reset
-                </button>
+                    <button onclick="resetGame()" class="flex-1 md:flex-none bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-lg font-medium transition text-sm">
+                        Reset
+                    </button>
+                </div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <!-- Left Column: The 15x15 Grid -->
-            <div class="xl:col-span-7 bg-white p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="flex justify-between items-center mb-4">
+            <div class="lg:col-span-7 bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <h2 class="text-lg font-semibold text-gray-700">Tournament Grid</h2>
-                    <div class="flex gap-3 text-xs font-normal bg-gray-50 p-2 rounded-lg">
-                        <span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded-sm"></div> Coop/Coop</span>
-                        <span class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded-sm"></div> Def/Def</span>
-                        <span class="flex items-center gap-1"><div class="w-3 h-3 bg-yellow-400 rounded-sm"></div> A Exploits</span>
-                        <span class="flex items-center gap-1"><div class="w-3 h-3 bg-blue-500 rounded-sm"></div> B Exploits</span>
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-[10px] md:text-xs font-normal bg-gray-50 p-2 rounded-lg w-full sm:w-auto">
+                        <span class="flex items-center gap-1"><div class="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-sm"></div> (C,C)</span>
+                        <span class="flex items-center gap-1"><div class="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-sm"></div> (D,D)</span>
+                        <span class="flex items-center gap-1"><div class="w-2 h-2 md:w-3 md:h-3 bg-yellow-400 rounded-sm"></div> A Wins</span>
+                        <span class="flex items-center gap-1"><div class="w-2 h-2 md:w-3 md:h-3 bg-blue-500 rounded-sm"></div> B Wins</span>
                     </div>
                 </div>
                 
-                <div class="relative overflow-auto pb-4" style="min-width: 600px;">
-                    <!-- Axis Labels -->
-                    <div class="flex ml-24 mb-2">
-                        <div id="top-labels" class="flex flex-row text-center gap-[2px] w-[610px] pl-1 pr-1"></div>
-                    </div>
-
-                    <div class="flex">
-                        <div id="left-labels" class="flex flex-col justify-around w-24 mr-2 text-right"></div>
-                        
-                        <div id="grid-container" class="grid grid-cols-15 gap-[2px] bg-gray-100 p-1 rounded border border-gray-200" style="width: 600px; height: 600px;">
-                            <!-- Cells generated by JS -->
+                <div class="overflow-x-auto custom-scroll pb-2">
+                    <div class="min-w-[500px] md:min-w-0"> <div class="flex">
+                             <div id="left-labels" class="flex mt-6 flex-col justify-around w-20 md:w-24 mr-2 text-right shrink-0"></div>
+                            
+                            <div class="flex flex-col flex-grow">
+                                <div id="top-labels" class="flex flex-row text-center gap-[2px] w-full mb-1 pl-1"></div>
+                                
+                                <div id="grid-container" class="grid grid-cols-15 gap-[2px] bg-gray-100 p-1 rounded border border-gray-200 aspect-square w-full">
+                                    </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Match Detail & Leaderboard -->
-            <div class="xl:col-span-5 space-y-6 flex flex-col h-full">
+            <div class="lg:col-span-5 flex flex-col gap-6">
                 
-                <!-- Match Details Panel -->
-                <div id="match-detail-panel" class="bg-white p-0 rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition-all duration-300">
-                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                        <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Match Analysis</h2>
-                        <span id="detail-coordinates" class="text-xs font-mono text-gray-400">Select a cell</span>
+                <div id="match-detail-panel" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition-all duration-300">
+                    <div class="p-3 md:p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h2 class="text-xs md:text-sm font-bold text-gray-700 uppercase tracking-wide">Match Analysis</h2>
+                        <span id="detail-coordinates" class="text-[10px] md:text-xs font-mono text-gray-400">Select a cell</span>
                     </div>
 
-                    <div id="detail-content-placeholder" class="p-8 text-center text-gray-400 text-sm">
+                    <div id="detail-content-placeholder" class="p-6 md:p-8 text-center text-gray-400 text-sm">
                         Click on any square in the grid to view the round-by-round timeline.
                     </div>
 
                     <div id="detail-content" class="hidden flex-col">
-                        <!-- Players Header -->
                         <div class="grid grid-cols-2 text-center border-b border-gray-100">
-                            <div class="p-3 border-r border-gray-100 bg-white">
-                                <div id="p1-name" class="font-bold text-gray-800 text-sm">Strategy A</div>
-                                <div id="p1-score" class="text-2xl font-mono text-indigo-600 font-bold">0</div>
+                            <div class="p-2 md:p-3 border-r border-gray-100 bg-white">
+                                <div id="p1-name" class="font-bold text-gray-800 text-xs md:text-sm truncate px-1">Strategy A</div>
+                                <div id="p1-score" class="text-xl md:text-2xl font-mono text-indigo-600 font-bold">0</div>
                             </div>
-                            <div class="p-3 bg-white">
-                                <div id="p2-name" class="font-bold text-gray-800 text-sm">Strategy B</div>
-                                <div id="p2-score" class="text-2xl font-mono text-indigo-600 font-bold">0</div>
+                            <div class="p-2 md:p-3 bg-white">
+                                <div id="p2-name" class="font-bold text-gray-800 text-xs md:text-sm truncate px-1">Strategy B</div>
+                                <div id="p2-score" class="text-xl md:text-2xl font-mono text-indigo-600 font-bold">0</div>
                             </div>
                         </div>
 
-                        <!-- Timeline -->
-                        <div class="p-4 bg-gray-50 border-b border-gray-200">
-                            <h3 class="text-xs font-semibold text-gray-500 mb-2 uppercase">Interaction Timeline</h3>
-                            <div class="timeline-scroll overflow-x-auto pb-2">
+                        <div class="p-3 md:p-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-[10px] font-semibold text-gray-500 mb-2 uppercase">Interaction Timeline</h3>
+                            <div class="custom-scroll overflow-x-auto pb-2">
                                 <div id="timeline-container" class="flex gap-1" style="min-width: max-content;">
-                                    <!-- Timeline bars go here -->
-                                </div>
+                                    </div>
                             </div>
                         </div>
 
-                        <div class="p-3 text-xs text-gray-500 bg-white flex justify-between">
+                        <div class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500 bg-white flex justify-between">
                             <span>Scoring: (C,C)=3, (D,D)=1, (D,C)=5/0</span>
                             <span id="detail-round-count">Round 0</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Live Leaderboard -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex-grow flex flex-col">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-700">Live Standings</h2>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 flex-grow flex flex-col h-[400px] lg:h-auto">
+                    <h2 class="text-lg font-semibold mb-2 md:mb-4 text-gray-700">Live Standings</h2>
                     <p class="text-xs text-gray-400 mb-2">Click any strategy to see its logic.</p>
-                    <div class="overflow-y-auto pr-2 flex-grow" id="leaderboard" style="max-height: 400px;">
-                        <!-- Leaderboard items -->
-                    </div>
+                    <div class="overflow-y-auto pr-2 flex-grow custom-scroll" id="leaderboard" style="max-height: 500px;">
+                        </div>
                 </div>
 
             </div>
         </div>
 
-        <!-- Strategy Logic Modal -->
-        <div id="strategy-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm" onclick="closeModal()">
-            <div class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full mx-4 transform transition-all scale-95 opacity-0" id="modal-content" onclick="event.stopPropagation()">
+        <div id="strategy-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4" onclick="closeModal()">
+            <div class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full transform transition-all scale-95 opacity-0" id="modal-content" onclick="event.stopPropagation()">
                 <div class="flex justify-between items-start mb-4">
-                    <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Strategy Name</h2>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <h2 id="modal-title" class="text-xl md:text-2xl font-bold text-gray-800">Strategy Name</h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 p-1">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
                 <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-4">
-                    <p id="modal-desc" class="text-gray-700 leading-relaxed"></p>
+                    <p id="modal-desc" class="text-gray-700 text-sm md:text-base leading-relaxed"></p>
                 </div>
                 <div class="text-xs text-gray-500 text-right">
                     Based on Axelrod's "The Evolution of Cooperation"
@@ -165,14 +151,12 @@
             </div>
         </div>
 
-        <!-- Disclaimer Footer -->
-        <footer class="mt-8 text-center text-xs text-gray-400 border-t border-gray-200 pt-4 pb-2">
-            <p>Disclaimer: The strategies implemented here are approximations based on descriptions from Robert Axelrod's "The Evolution of Cooperation". As the original 1980 source code is not publicly available, specific implementation details (like exact random seeds, tie-breaking logic, or complex look-back depths) may differ from the original tournament.</p>
+        <footer class="mt-8 text-center text-[10px] md:text-xs text-gray-400 border-t border-gray-200 pt-4 pb-8">
+            <p class="px-4">The strategies implemented here are approximations based on descriptions from Robert Axelrod's "The Evolution of Cooperation".</p>
         </footer>
 
     </div>
 
-    <!-- Logic Script -->
     <script>
         // --- Game Constants & State ---
         const MAX_ROUNDS = 200; 
@@ -551,6 +535,11 @@
             if (cell) cell.classList.add('selected-cell');
 
             renderMatchDetails();
+            
+            // On mobile, scroll to details
+            if (window.innerWidth < 1024) {
+                 document.getElementById('match-detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function showStrategyInfo(index) {
@@ -595,14 +584,14 @@
             // Labels
             strategies.forEach((s, idx) => {
                 const tl = document.createElement('div');
-                tl.className = 'w-full text-center text-[12px] text-gray-500 font-mono origin-bottom-left transform  cursor-pointer hover:font-bold hover:text-indigo-600 transition-colors';
+                tl.className = 'w-full text-center text-[10px] md:text-[12px] text-gray-500 font-mono cursor-pointer hover:font-bold hover:text-indigo-600 transition-colors truncate';
                 tl.innerText = (idx+1); 
                 tl.title = `Click for info: ${s.name}`;
                 tl.onclick = () => showStrategyInfo(idx);
                 topLabels.appendChild(tl);
 
                 const ll = document.createElement('div');
-                ll.className = 'text-[10px] text-gray-600 font-medium truncate h-[2.3rem] leading-[2.3rem] cursor-pointer hover:text-indigo-600 hover:font-bold transition-colors';
+                ll.className = 'text-[9px] md:text-[10px] text-gray-600 font-medium truncate h-full flex items-center justify-end cursor-pointer hover:text-indigo-600 hover:font-bold transition-colors';
                 ll.innerText = s.name;
                 ll.onclick = () => showStrategyInfo(idx);
                 leftLabels.appendChild(ll);
@@ -615,7 +604,7 @@
                 for (let j = 0; j < 15; j++) {
                     const cell = document.createElement('div');
                     cell.id = `cell-${i}-${j}`;
-                    cell.className = 'grid-cell w-full h-full rounded-sm bg-gray-200 relative cursor-pointer border border-white/50 hover:brightness-95';
+                    cell.className = 'grid-cell w-full h-full rounded-[1px] md:rounded-sm bg-gray-200 relative cursor-pointer border border-white/50 hover:brightness-95';
                     cell.onclick = () => selectMatch(i, j);
                     grid.appendChild(cell);
                 }
@@ -674,28 +663,28 @@
                 else { pA=0; pB=5; }
 
                 const colDiv = document.createElement('div');
-                colDiv.className = 'flex flex-col gap-1 items-center min-w-[24px]';
+                colDiv.className = 'flex flex-col gap-[2px] items-center min-w-[18px] md:min-w-[24px]';
 
                 // Round Number (every 5)
                 const num = document.createElement('div');
-                num.className = 'text-[9px] text-gray-300 h-3 leading-3';
+                num.className = 'text-[8px] md:text-[9px] text-gray-300 h-3 leading-3';
                 num.innerText = (r+1) % 5 === 0 ? (r+1) : '';
                 colDiv.appendChild(num);
 
                 // Player A Move
                 const boxA = document.createElement('div');
-                boxA.className = `w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${mA===COOP ? 'bg-green-500' : 'bg-red-500'}`;
+                boxA.className = `w-4 h-4 md:w-6 md:h-6 rounded-[2px] md:rounded flex items-center justify-center text-[8px] md:text-[10px] font-bold text-white shadow-sm ${mA===COOP ? 'bg-green-500' : 'bg-red-500'}`;
                 boxA.innerText = pA;
                 colDiv.appendChild(boxA);
 
                 // Connector line
                 const line = document.createElement('div');
-                line.className = 'w-[1px] h-2 bg-gray-200';
+                line.className = 'w-[1px] h-1 md:h-2 bg-gray-200';
                 colDiv.appendChild(line);
 
                 // Player B Move
                 const boxB = document.createElement('div');
-                boxB.className = `w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${mB===COOP ? 'bg-green-500' : 'bg-red-500'}`;
+                boxB.className = `w-4 h-4 md:w-6 md:h-6 rounded-[2px] md:rounded flex items-center justify-center text-[8px] md:text-[10px] font-bold text-white shadow-sm ${mB===COOP ? 'bg-green-500' : 'bg-red-500'}`;
                 boxB.innerText = pB;
                 colDiv.appendChild(boxB);
 
@@ -704,11 +693,16 @@
 
             // Auto scroll to end
             const scrollContainer = document.querySelector('.timeline-scroll');
-            scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+            if (scrollContainer) scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+            // Also scroll the inner container if referenced differently
+            const tlContainer = document.getElementById('timeline-container')?.parentElement;
+            if (tlContainer) tlContainer.scrollLeft = tlContainer.scrollWidth;
         }
 
         function updateUI() {
-            document.getElementById('round-display').innerText = `${currentRound}/${MAX_ROUNDS}`;
+            const displayStr = `${currentRound}/${MAX_ROUNDS}`;
+            document.getElementById('round-display').innerText = displayStr;
+            document.getElementById('round-display-mobile').innerText = `Round: ${displayStr}`;
 
             // Update Grid Colors
             for (let i = 0; i < 15; i++) {
@@ -729,7 +723,7 @@
 
                     // Keep selected class if selected
                     const isSelected = (selectedMatch.row === i && selectedMatch.col === j);
-                    cell.className = `grid-cell w-full h-full rounded-sm relative cursor-pointer border border-white/50 hover:brightness-95 ${colorClass} ${isSelected ? 'selected-cell' : ''}`;
+                    cell.className = `grid-cell w-full h-full rounded-[1px] md:rounded-sm relative cursor-pointer border border-white/50 hover:brightness-95 ${colorClass} ${isSelected ? 'selected-cell' : ''}`;
                 }
             }
 
@@ -745,14 +739,14 @@
             const board = document.getElementById('leaderboard');
             
             const sortedIndices = totalScores.map((score, index) => ({ score, index }))
-                                            .sort((a, b) => b.score - a.score);
+                                           .sort((a, b) => b.score - a.score);
             
             board.innerHTML = '';
             
             sortedIndices.forEach((item, rank) => {
                 const s = strategies[item.index];
                 const row = document.createElement('div');
-                row.className = 'flex items-center justify-between p-3 mb-2 rounded bg-gray-50 border-l-4 cursor-pointer hover:bg-gray-100 transition-colors ' + s.color;
+                row.className = 'flex items-center justify-between p-2 md:p-3 mb-2 rounded bg-gray-50 border-l-4 cursor-pointer hover:bg-gray-100 transition-colors ' + s.color;
                 row.onclick = () => showStrategyInfo(item.index);
                 
                 let rankClass = "bg-gray-200 text-gray-600";
@@ -761,11 +755,11 @@
                 if(rank===2) rankClass = "bg-orange-100 text-orange-800 font-bold";
 
                 row.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-6 h-6 flex items-center justify-center rounded-full text-xs ${rankClass}">${rank+1}</span>
-                        <span class="font-medium text-gray-700 text-sm">${s.name}</span>
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <span class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full text-[10px] md:text-xs ${rankClass}">${rank+1}</span>
+                        <span class="font-medium text-gray-700 text-xs md:text-sm truncate max-w-[120px] md:max-w-none">${s.name}</span>
                     </div>
-                    <span class="font-mono font-bold text-indigo-600">${item.score}</span>
+                    <span class="font-mono font-bold text-indigo-600 text-sm md:text-base">${item.score}</span>
                 `;
                 board.appendChild(row);
             });
@@ -804,7 +798,6 @@
         function resetGame() {
             stopGame();
             currentRound = 0;
-            // Clear selection on reset? No, keep it, just clear data.
             initTournament();
             // Force redraw of empty details
             renderMatchDetails();
